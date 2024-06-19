@@ -70,7 +70,7 @@ const Customers = () => {
   useEffect(() => {
     if (data) {
       setRows(
-        data.users.map((i) => ({
+        data.user.map((i) => ({
           avatar: <img src={i.photo} />,
           name: i.name,
           email: i.email,
