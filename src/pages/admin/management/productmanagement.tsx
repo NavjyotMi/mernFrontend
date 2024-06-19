@@ -3,33 +3,30 @@ import { FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminSidebar from "../../../components/admin/AdminSidebar";
-import { server } from "../../../redux/Store";
+import { RootState, server } from "../../../redux/Store";
 import {
   useDeleteProductMutation,
   useProductDetailsQuery,
   useUpdateProductMutation,
 } from "../../../redux/api/productApi";
-import { UserReducerInitialState } from "../../../types/reducer-types";
 import { responseToast } from "../../../utils/features";
 
 const Productmanagement = () => {
-  const { user } = useSelector(
-    (state: { userReducer: UserReducerInitialState }) => state.userReducer
-  );
+  const { user } = useSelector((state: RootState) => state.userReducer);
   const params = useParams();
   const navigate = useNavigate();
   const { data } = useProductDetailsQuery(params.id!);
 
-  const [product, setProduct] = useState({
+  const { price, photo, name, stock, category } = data?.product || {
     _id: "",
     photo: "",
     category: "",
     name: "",
     stock: 0,
     price: 0,
-  });
+  };
 
-  const { price, photo, name, category, stock } = product;
+  // const { price, photo, name, category, stock } = product;
   const [priceUpdate, setPriceUpdate] = useState<number>(price);
   const [stockUpdate, setStockUpdate] = useState<number>(stock);
   const [nameUpdate, setNameUpdate] = useState<string>(name);
@@ -65,31 +62,27 @@ const Productmanagement = () => {
     if (stockUpdate !== undefined)
       formData.set("stock", stockUpdate.toString());
     if (photoFile) formData.set("photo", photoUpdate);
-    console.log("i am checking for the submit handler ", {
-      formData,
-      userId: user?._id!,
-      productId: product?._id,
-    });
 
     const res = await updateProduct({
       formData,
       userId: user?._id!,
-      productId: product?._id,
+      productId: data?.product._id!,
     });
 
     responseToast(res, navigate, "");
   };
 
   const deleteHandler = async () => {
-    await deleteproduct({
+    const res = await deleteproduct({
       userId: user?._id!,
       productId: data?.product._id!,
     });
+
+    responseToast(res, navigate, "/admin/product");
   };
 
   useEffect(() => {
     if (data) {
-      setProduct(data.product);
       setNameUpdate(data.product.name);
       setStockUpdate(data.product.stock);
       setPriceUpdate(data.product.price);
@@ -102,7 +95,7 @@ const Productmanagement = () => {
       <AdminSidebar />
       <main className="product-management">
         <section>
-          <strong>ID - {product._id}</strong>
+          <strong>ID - {data?.product._id}</strong>
           <img src={`${server}/${photo}`} alt="Product" />
           <p>{name}</p>
           {stock > 0 ? (
